@@ -69,5 +69,95 @@ clean_boms |>
 
 ```
 
+We now need to add some more information: demand for finished products, and component inventory.
 
+```{r}
+components <- clean_boms |> 
+  distinct(item_code) |> 
+  mutate(
+    qty_on_hand = sample(50:300, n(), replace = TRUE)
+  )
+
+order_book <- clean_boms |> 
+  distinct(sku) |> 
+  mutate(
+    demand = sample(500:2000, n())
+  )
+
+```
+
+
+We now join the order book into the BOM list to find the aggregate demand of the parts:
+
+```{r}
+clean_boms |> 
+  left_join(
+    order_book,
+    by = "sku") |> 
+  group_by(item_code) |> 
+  summarise(
+    total_required = sum(demand * qty),
+    products_used_in = list(sku)) ->
+  aggregate_demand
+
+aggregate_demand |> 
+  slice_head(n = 5)
+
+```
+
+The above returns the total demand for all components that go into our 15 product SKUs. Additionally,
+`products_used_in` is a list column detailing which finished products the components goes into. This
+detail can be viewed by opening the data set in the global environment, or by `tidyr::unnest`.
+
+### Optimizing Production
+By adding in the component inventory and reshaping the data, we can maximize production output.
+
+```{r}
+clean_boms |> 
+  select(sku:qty) |> 
+  pivot_wider(
+    names_from = sku,
+    values_from = qty,
+    names_sort = TRUE,
+    values_fill = 0,
+    values_fn = sum) |> 
+  left_join(
+    components,
+    by = "item_code") ->
+  pivot
+
+con_mat <- data.matrix(select(pivot, matches(r"(\d{5})")))
+
+f_obj <- rep(1, ncol(con_mat))
+
+f_con <- rbind(con_mat, diag(1, ncol(con_mat)))
+
+f_dir <- rep("<=", nrow(f_con))
+
+# Order book must be sorted by SKU ascending, just as with the other lists.
+f_rhs <- c(pivot$qty_on_hand, order_book$demand)
+
+```
+
+Optimize with `lpSolve::lp`:
+
+```{r}
+
+lp_obj <- lp(
+  'max',
+  f_obj,
+  f_con,
+  f_dir,
+  f_rhs,
+  all.int = TRUE)
+
+lp_obj$objval
+solution <- tibble(
+  order_book,
+  solution = lp_obj$solution
+)
+
+solution
+
+```
 
