@@ -21,4 +21,53 @@ To create analyses of this format, the following are required:
  
 * Master lists of on-hand and on-order inventory levels for components.
  
- 
+### Methodology
+At a high level, we will be combining BOMs, aggregating the components and summarising by demand
+for completed products. The packages `tidyverse` and `lpSolve` will be used. I have also created a file 
+called `bom_generator.R` that creates a 15 imaginary BOMs of finished products, each having 40 components
+with quantities per build assigned.
+
+```{r}
+library(tidyverse)
+library(lpSolve)
+source('bom_generator.R')
+```
+
+The way that BOMs are outputted from an ERP system / data source may vary significantly. The BOM
+examples I've created are very simplistic - component code, quantity required per build of the 
+finished product, and whether the component is made or purchased. Your BOMs may have other important
+variables to include. 
+
+In this example, let's say you are able to retrieve one BOM at a time from your data source as a
+.csv file. The file name is the finished product SKU. For our analysis, we will need to read all
+the BOMs for the products of interest into a single table. If the BOMs are contained in a folder
+called `rand_boms` that is a sub-folder of our working directory, this can be accomplished by the
+following:
+
+```{r}
+files <- fs::dir_ls("rand_boms")
+
+files |> 
+  map_dfr(~ read_csv(.x, col_types = cols('c', 'd', 'f')), .id = "source") |> 
+  slice_head(n = 5)
+  
+```
+
+In the above code chunk, we've read all the BOM .csv files in `rand_boms` and appended them into a 
+single table by use of the `purrr::map_dfr` function. Notice that the `source` column includes
+the full file path. We will want to have the SKU as its own variable by doing the following:
+
+```{r}
+files |> 
+  map_dfr(~ read_csv(.x, col_types = cols('c', 'd', 'f')), .id = "source") |>
+  mutate(sku = str_extract(source, r"(\d{5})")) |> 
+  select(sku, item_code, qty, src) ->
+  clean_boms
+
+clean_boms |> 
+  slice_head(n = 5)
+
+```
+
+
+

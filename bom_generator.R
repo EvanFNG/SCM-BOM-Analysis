@@ -12,19 +12,30 @@ product_list <- as.character(sample(1e4:9e4, 15))
 # of the components going into them and the quantity per build.
 tibble(
   sku = product_list,
-  item_code = list(component = sample(parts_list, 40))) |>
-  unnest(item_code) |>
+  row_rep = list(rep(1, 40))) |>
+  unnest(row_rep) |>
   mutate(
+    item_code = sample(parts_list, n(), replace = TRUE),
     qty = sample(1:3, n(), prob = c(.8, .15, .05), replace = TRUE),
     src = sample(c('M', 'P'), n(), prob = c(.3, .7), replace = TRUE)) |>
-  nest(bom = c(item_code, qty, src)) ->
+  nest(bom = c(item_code, qty, src)) |>
+  select(-row_rep) ->
   bom_list
 
+rm(parts_list, product_list)
+
 # Writing each imaginary BOM to a csv.
-# You will need a folder in your working directory called rand_boms for this to work
-map2(
-  bom_list$bom,
-  bom_list$sku,
-  ~ write_csv(.x, file = paste0('rand_boms/', .y, '.csv'))
-)
+if(!dir.exists('rand_boms')) {
+
+  dir.create('rand_boms')
+
+  map2(
+    bom_list$bom,
+    bom_list$sku,
+    ~ write_csv(.x, file = paste0('rand_boms/', .y, '.csv'))
+  )
+}
+
+rm(bom_list)
+
 
