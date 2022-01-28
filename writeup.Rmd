@@ -1,0 +1,24 @@
+---
+title: "Analysing BOMs and Maximizing Production"
+author: "Evan Smith"
+date: "1/27/2022"
+output: html_document
+---
+
+### Intro
+Manufacturers with less-than-stellar ERP systems still have a need to analyse inventory levels
+and create build plans that are achievable and optimized. With sufficient access to the bill
+of material (BOM) for each desired completed product to be built, it is possible to create
+analyses that summarise needs and optimize plans based on current and future inventory levels.
+
+### Requirements
+To create analyses of this format, the following are required:
+
+* List of demand of completed products with their respective SKUs, either true demand or a theoretical.
+
+* BOM for each completed product of interest. A product's BOM should have a list of every component
+ that goes into building the completed product.
+ 
+* Master lists of on-hand and on-order inventory levels for components.
+ 
+ 
