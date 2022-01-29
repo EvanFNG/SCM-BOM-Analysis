@@ -3,6 +3,7 @@ library(tidyverse)
 set.seed(123)
 
 # Creating a list of random components to select from.
+# Might want to add SRC to this so it doesn't vary.
 parts_list <- as.character(sample(1e5:9e5, 200))
 
 # List of random product SKUs

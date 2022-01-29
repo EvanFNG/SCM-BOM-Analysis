@@ -2,7 +2,7 @@
 title: "Analysing BOMs and Maximizing Production"
 author: "Evan Smith"
 date: "1/27/2022"
-output: html_document
+output: github_document
 ---
 
 ### Intro
@@ -28,6 +28,8 @@ called `bom_generator.R` that creates a 15 imaginary BOMs of finished products, 
 with quantities per build assigned.
 
 ```{r}
+pkg <- c("tidyverse", "lpSolve")
+invisible(lapply(pkg, function(x) if(!x %in% installed.packages()) install.packages(pkg)))
 library(tidyverse)
 library(lpSolve)
 source('bom_generator.R')
