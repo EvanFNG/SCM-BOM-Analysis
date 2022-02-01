@@ -1,6 +1,6 @@
 # Required packages will be installed if they are not already.
 pkg <- c("tidyverse", "lpSolve")
-invisible(lapply(pkg, function(x) if(!x %in% installed.packages()) install.packages(x)))
+invisible(lapply(pkg, \(x) if(!x %in% installed.packages()) install.packages(x)))
 
 library(tidyverse)
 library(lpSolve)
